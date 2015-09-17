@@ -1,0 +1,110 @@
+/*******************************************************************************************
+  SIMPL+ ModuleName Information
+*******************************************************************************************/
+/*
+Dealer Name: The Salvation Army
+System Name: KrocHR
+System Number: 
+Programmer: Sean Sauve
+Rev: 1.0
+Comments: Created to handle incoming rx$ from a Bose ESP.  Designed with ControlSpace 4.2 as the test device, in an enviroment with 5 ESPs.
+*/
+
+#SYMBOL_NAME "Bose ESP Serial Gatherer"
+#HINT "Handles incoming rx$ from a Bose ESP."
+#CATEGORY "46" "Bose Modules" // Custom
+#DEFAULT_NONVOLATILE
+#ENABLE_TRACE
+
+BUFFER_INPUT rx_input$[4096];
+STRING_OUTPUT rx_output$;
+DIGITAL_OUTPUT ACK_FB;
+STRING_OUTPUT NAK_FB$;
+STRING_PARAMETER ESP_Name$[255];
+
+
+CHANGE rx_input$ 
+{
+	Integer pos, pos1, pos2, pos3, pos4, pos5, pos6, trash, x;
+	String result$[4096], rx_temp$[4096];
+	
+	pos=1;
+	While (pos>0)
+	  {
+		pos=0;
+		rx_temp$=rx_input$;
+		pos1=find(";\x0D",rx_temp$); //Trap this first.
+		pos2=find(";",rx_temp$);     //Used when multiple Gets are sent on a single "line"
+		pos3=find("\x0D",rx_temp$);  //CR
+		pos4=find("\x06",rx_temp$);  //ACK
+		pos5=find("\x15",rx_temp$);  //NAK nn (nn is the error code)
+		pos6=find("\x0A",rx_temp$);  //LF -- was found to accompany 'Ready'
+
+		//TRACE("positions are pos:%u pos1:%u pos2:%u pos3:%u pos4:%u pos5:%u\n", pos, pos1, pos2, pos3, pos4, pos5);
+
+//		position must be (a) not zero, (b) lowest or equal to lowest (by order) as long as competing position is not 0.  pos5 must also have the trailing error code
+        if ((pos1>0) && ((pos1<=pos2) | (pos2=0)) && ((pos1<=pos3) | (pos3=0)) && ((pos1<=pos4) | (pos4=0)) && ((pos1<=pos5) | (pos5=0)) && ((pos1<=pos6) | (pos6=0)))
+		  {
+	        pos=pos1; //unify for the while condition
+			result$=left(rx_temp$,pos-1)+"\r"; //save results until after the trash
+			for (x = 1 to (pos + 1)) {trash=GETC(rx_input$);} //discard
+			TRACE("%s : result found: %s\\x0D\n\n", ESP_Name$, mid(result$,1,len(result$)-1)); //send to console
+			rx_output$=result$; //send to simpl
+		  }
+		else if ((pos2>0) && ((pos2<pos1) | (pos1=0)) && ((pos2<=pos3) | (pos3=0)) && ((pos2<=pos4) | (pos4=0)) && ((pos2<=pos5) | (pos5=0)) && ((pos2<=pos6) | (pos6=0)))
+
+          {
+	        pos=pos2;
+			result$=left(rx_temp$,pos-1)+"\r";
+			for (x = 1 to pos) {trash=GETC(rx_input$);}
+			TRACE("%s : result found: %s\n\n", ESP_Name$, result$);
+			rx_output$=result$;
+		  }
+		else if ((pos3>0) && ((pos3<pos1) | (pos1=0)) && ((pos3<pos2) | (pos2=0)) && ((pos3<=pos4) | (pos4=0)) && ((pos3<=pos5) | (pos5=0)) && ((pos3<=pos6) | (pos6=0)))
+		  {
+ 	        pos=pos3;
+			result$=left(rx_temp$,pos-1)+"\r";
+			for (x = 1 to (pos)) {trash=GETC(rx_input$);}
+			TRACE("%s : result found: %s\\x0D\n\n", ESP_Name$, mid(result$,1,len(result$)-1)); 
+			rx_output$=result$;
+		  }
+		else if ((pos4>0) && ((pos4<pos1) | (pos1=0)) && ((pos4<pos2) | (pos2=0)) && ((pos4<pos3) | (pos3=0)) && ((pos4<=pos5) | (pos5=0)) && ((pos4<=pos6) | (pos6=0)))
+		  {
+ 	        pos=pos4;
+			for (x = 1 to (pos)) {trash=GETC(rx_input$);}
+			TRACE("%s : result found: ACK\n", ESP_Name$);
+			pulse(20, ACK_FB);
+		  }
+		else if ((pos5>0) && ((pos5<pos1) | (pos1=0)) && ((pos5<pos2) | (pos2=0)) && ((pos5<pos3) | (pos3=0)) && ((pos5<pos4) | (pos4=0)) && ((pos5<=pos6) | (pos6=0)))
+		  {
+	        pos=pos5;
+			result$=mid(rx_temp$,pos+1,2);
+			for (x = 1 to (pos + 2)) {trash=GETC(rx_input$);}
+			TRACE("%s : result found: NAK %s\n\n", ESP_Name$, result$);
+			NAK_FB$=result$;
+		  }
+		else if ((pos6>0) && ((pos6<pos1) | (pos1=0)) && ((pos6<pos2) | (pos2=0)) && ((pos6<pos3) | (pos3=0)) && ((pos6<pos4) | (pos4=0)) && ((pos6<pos5) | (pos5=0)))
+		  {
+ 	        pos=pos6;
+			result$=left(rx_temp$,pos);
+			for (x = 1 to (pos)) {trash=GETC(rx_input$);}
+			TRACE("%s : result found: %s\\x0A\n\n", ESP_Name$, mid(result$,1,len(result$)-1));
+			rx_output$=result$;
+		  }
+	
+		else 
+		  {	
+			//TRACE("%s : no result found, remaining string: %s\n\n", ESP_Name$, rx_temp$);
+			break; //exit loop, waiting for next incoming change event.
+          }
+	  }
+
+
+		
+			
+
+
+
+}
+
+
