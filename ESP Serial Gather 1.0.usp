@@ -2,10 +2,6 @@
   SIMPL+ ModuleName Information
 *******************************************************************************************/
 /*
-Dealer Name: The Salvation Army
-System Name: KrocHR
-System Number: 
-Programmer: Sean Sauve
 Rev: 1.0
 Comments: Created to handle incoming rx$ from a Bose ESP.  Designed with ControlSpace 4.2 as the test device, in an enviroment with 5 ESPs.
 */
