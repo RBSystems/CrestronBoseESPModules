@@ -1,0 +1,234 @@
+/*******************************************************************************************
+  SIMPL+ ModuleName Information
+*******************************************************************************************/
+/*
+Dealer Name: Bose Corporation
+System Name: MMCP
+Minimum Control Space Version required: 1.2
+Programmer: AY / Sean Sauve
+Rev: 1.1
+*/
+
+/*******************************************************************************************
+  Compiler Directives
+*******************************************************************************************/
+#SYMBOL_NAME "Bose ESP Matrix Mixer Cross Point 2.0"
+#HINT "Recalls and sets Parameters of a Matrix Mixer Cross Point. Control Space V1.2 or higher needed "
+#CATEGORY "46" "Bose Modules" // Custom
+#DEFINE_CONSTANT NO_CMD 0
+#DEFINE_CONSTANT MUTE_CMD 1
+#DEFINE_CONSTANT LEVEL_CMD 2
+
+#DEFAULT_VOLATILE
+
+#HELP_BEGIN
+Inputs:
+	GetMMCPLevel. Digital. Active High. 
+		Retreives the level of a particular cross point on a Matrix Mixer Module.
+	GetMMCPMute. Digital. Active High.
+		Retreives the Mute State of a particular cross point on a Matrix Mixer Module.
+	SetMMCPInput. Analog. Change.
+		Sets the Input Channel of the Cross Point.
+	SetMMCPOutput. Analog. Change.
+		Sets the Output Channel of the Cross Point.
+	SetMMCPSizeOfMatrix. Analog. Change,
+		Sets the size of the matrix.
+		Allowed Values are 4, 8 and 16. 
+	SetMMCPLevel$. String. Change.
+		Sets the level of a particular cross point on a Matrix Mixer Module.
+		Allowed Input Range is -999,-60.0 to +12.0 in 0.5 Steps
+	SetMMCPMute$. String. Ghange.
+		Sets the mute of a particular cross point on a Matrix Mixer Module.	
+		Allowed Inputs are O for On, F for Off, T for Toggle.
+	ModuleName$. String. Change.
+		Sets the name of the module.
+	Rx$. Serial.
+		Incoming Serial Signal from MMCP.
+
+Outputs:
+    MMCPLevelFB$. Serial.
+		Reports back the state of the level on a particular cross point on a Matrix Mixer Module.
+    MMCPMuteFB$. Serial.
+		Reports back the state of the Mute on a particular cross point on a Matrix Mixer Module
+
+	Tx$. Serial. 
+		Outgoing Serial Signal from MMCP88.
+#HELP_END
+
+DIGITAL_INPUT GetMMCPLevel,GetMMCPMute;
+ANALOG_INPUT SetMMCPInput,SetMMCPOutput,SetMMCPSizeOfMatrix;
+STRING_INPUT SetMMCPLevel$[6],SetMMCPMute$[1],ModuleName$[255];
+BUFFER_INPUT Rx$[255]; 
+   
+STRING_OUTPUT MMCPLevelFB$,MMCPMuteFB$,Tx$;
+
+INTEGER Operation, CrossPoint, MatrixSize, CommandToFindLen, CrossPointLen;
+STRING CommandToFind$[255], CrossPointToFind$[255], InCommand$[255];
+
+Function Get(Integer Index1)
+{
+	String Get$[255];
+	
+   	Makestring(Get$, "GA\"#%s\">%d>%d\r",ModuleName$,Index1,CrossPoint);
+	Operation = NO_CMD;
+	Tx$=Get$;
+}
+
+Function Set(Integer Index1, String Value$)
+{
+	String Set$[255];
+
+	Makestring(Set$, "SA\"#%s\">%d>%d=%s\r",ModuleName$,Index1,CrossPoint,Value$);
+	Operation = Index1;
+	Tx$=Set$;
+    Get(Index1);
+}
+                                                             
+ 
+//Gets
+Push GetMMCPMute
+{
+	String GetCommand$[255];
+    
+	If (Crosspoint<>0)
+	{
+		Get(MUTE_CMD);
+	}
+}
+
+Push GetMMCPLevel
+{
+	String GetCommand$[255];
+    
+	If (Crosspoint<>0)
+	{
+		Get(LEVEL_CMD);
+	}
+}
+
+//Sets  
+CHANGE SetMMCPMute$
+{
+	String Mute$[1];
+    
+    Mute$=SetMMCPMute$;
+	If ((Mute$="O") || (Mute$="F") || (Mute$="T") || (Crosspoint<>0))
+    {
+	    Set(MUTE_CMD,Mute$);
+	}
+}
+
+CHANGE SetMMCPLevel$
+{
+	String Level$[6];
+    
+ 	Level$=SetMMCPLevel$;
+	If (Crosspoint<>0)
+	{
+	    Set(LEVEL_CMD,Level$);
+	}
+}
+
+//Other
+Change SetMMCPInput
+{
+	Crosspoint=(SetMMCPInput-1)*MatrixSize+SetMMCPOutput;
+	If (Crosspoint<>0)
+	{
+		MakeString(CrossPointToFind$,">%d=",Crosspoint);
+		CrossPointLen = Len(CrossPointToFind$);
+	}
+}
+
+Change SetMMCPOutput
+{
+	Crosspoint=(SetMMCPInput-1)*MatrixSize+SetMMCPOutput;
+	If (Crosspoint<>0)
+	{
+		MakeString(CrossPointToFind$,">%d=",Crosspoint);
+		CrossPointLen = Len(CrossPointToFind$);
+	}
+}
+
+
+Change SetMMCPSizeOfMatrix
+{
+	If ((SetMMCPSizeOfMatrix=4) || (SetMMCPSizeOfMatrix=8) || (SetMMCPSizeOfMatrix=16))
+	{
+		MatrixSize=SetMMCPSizeOfMatrix;
+		Crosspoint=(SetMMCPInput-1)*MatrixSize+SetMMCPOutput;
+	}		
+	If (Crosspoint<>0)
+	{
+		MakeString(CrossPointToFind$,">%d=",Crosspoint);
+		CrossPointLen = Len(CrossPointToFind$);
+	}
+}
+
+Change ModuleName$
+{
+
+	Makestring(CommandToFind$, "\"#%s\">",ModuleName$);
+	CommandToFindLen = Len(CommandToFind$);
+}
+
+CHANGE Rx$
+{	
+
+	Integer CommandStart,CommandEnd, InCommandLength, CrossPointStart,CrossPointFound;
+	String Received$[100], Index$[2],Trash[255];
+
+	InCommand$=InCommand$+Rx$;
+	ClearBuffer(Rx$);
+	CommandStart = Find(CommandToFind$, InCommand$);
+	CommandEnd = Find("\r", InCommand$);
+	CrossPointStart = Find(CrossPointToFind$, InCommand$);
+	While (InCommand$<>"" && (CommandEnd>=1)) //Parses through the buffer until empty
+	{
+		CommandStart = find(CommandToFind$, InCommand$);
+		CrossPointStart = Find(CrossPointToFind$, InCommand$);
+		if((CommandStart > 0) && (CommandEnd >= (CommandStart+CommandToFindLen) && (CrossPointStart>(CommandStart+CommandToFindLen)) && (CrossPointStart < CommandEnd))) //Handles gets and asynchronos updates
+		{
+			Received$=Mid(InCommand$,CrossPointStart+CrossPointLen,CommandEnd-(CrossPointStart+CrossPointLen));
+			Index$=Mid(InCommand$,CommandStart+CommandToFindLen,CrossPointStart-(CommandStart+CommandToFindLen));
+			CSWITCH (ATOI(Index$))
+			{
+	        	Case(MUTE_CMD):
+				{
+					MMCPMuteFB$=Received$;
+					Break;
+				}			
+				Case(LEVEL_CMD):
+				{
+					MMCPLevelFB$=Received$;
+					break;
+				}
+			}
+		}
+		
+        //Remove the Command from the "buffer"
+		InCommandLength=len(InCommand$);
+		Trash=mid(InCommand$,1,CommandEnd);
+		If(CommandEnd<InCommandLength){
+			InCommand$=mid(InCommand$,CommandEnd+1,InCommandLength-CommandEnd);
+		}Else{
+        	InCommand$="";
+		}
+		
+		CommandEnd = find("\r", InCommand$);
+
+	}
+}
+
+Function Main() //Clears Global Variables
+{
+	InCommand$="";
+	CommandToFind$="";
+	CrossPointToFind$="";
+	Operation = 0;
+	CommandToFindLen = 0;
+	CrossPoint = 0;
+	MatrixSize = 0;
+	CrossPointLen = 0;
+
+}
