@@ -1,0 +1,111 @@
+[BEGIN]
+  Version=1
+[END]
+[BEGIN]
+  ObjTp=FSgntr
+  Sgntr=UserSPlus
+  RelVrs=1
+  IntStrVrs=1
+  SPlusVrs=4.02.26
+  CrossCplrVrs=1.3
+[END]
+[BEGIN]
+  ObjTp=Hd
+  Cmn1=Inputs:\\	GetMMCPLevel. Digital. Active High. \\		Retreives the||1
+  Cmn2=level of a particular cross point on a Matrix Mixer Module.\\	GetMMCPMute.
+  Cmn3=||1Digital. Active High.\\		Retreives the Mute State of a particular||1
+  Cmn4=cross point on a Matrix Mixer Module.\\	SetMMCPInput. Analog. Change.
+  Cmn5=\\		Sets the Input Channel of the Cross Point.\\	SetMMCPOutput.||1
+  Cmn6=Analog. Change.\\		Sets the Output Channel of the Cross Point.\\
+  Cmn7=	SetMMCPSizeOfMatrix. Analog. Change,\\		Sets the size of the matrix.
+  Cmn8=\\		Allowed Values are 4, 8 and 16. \\	SetMMCPLevel$. String. Change.
+  Cmn9=\\		Sets the level of a particular cross point on a Matrix Mixer||1
+  Cmn10=Module.\\		Allowed Input Range is -999,-60.0 to +12.0 in 0.5 Steps\\
+  Cmn11=	SetMMCPMute$. String. Ghange.\\		Sets the mute of a particular||1
+  Cmn12=cross point on a Matrix Mixer Module.	\\		Allowed Inputs are O for||1
+  Cmn13=On, F for Off, T for Toggle.\\	ModuleName$. String. Change.\\		Sets||1
+  Cmn14=the name of the module.\\	Rx$. Serial.\\		Incoming Serial Signal||1
+  Cmn15=from MMCP.\\\\Outputs:\\    MMCPLevelFB$. Serial.\\		Reports back||1
+  Cmn16=the state of the level on a particular cross point on a Matrix Mixer||1
+  Cmn17=Module.\\    MMCPMuteFB$. Serial.\\		Reports back the state of the||1
+  Cmn18=Mute on a particular cross point on a Matrix Mixer Module\\\\	Tx$.
+  Cmn19=||1Serial. \\		Outgoing Serial Signal from MMCP88.
+[END]
+[BEGIN]
+  ObjTp=Symbol
+  Exclusions=1,19,20,21,88,89,167,168,179,213,214,215,216,217,225,226,248,249,266,267,310,362,378,380,405,407,408,409,478,522,537,554,586,590,611,624,718,756,767,830,841,842,854,883,955,1032,1062,1079,1128,1129,1134,1140,1157,1158,1195,1199,1220,1221,1222,1223,1299,1348,1349,1439,1472,1473,1499,1746,1803,1975,2229,2354,2514,2523,2532,2706,2707,3235,3236,3427,3454,3567,3568,3601,3602,3708,3902,3903,3912,3918,3925,3926,4206,4207,
+  Exclusions_CDS=5
+  Inclusions_CDS=6
+  Name=Bose ESP Matrix Mixer Cross Point 2.0
+  SmplCName=ESP Matrix Mixer CrossPoint 2.0.usp
+  Code=1
+  SysRev5=4.000
+  SMWRev=2.02.05
+  InputCue1=GetMMCPLevel
+  InputSigType1=Digital
+  InputCue2=GetMMCPMute
+  InputSigType2=Digital
+  InputList2Cue1=SetMMCPInput
+  InputList2SigType1=Analog
+  InputList2Cue2=SetMMCPOutput
+  InputList2SigType2=Analog
+  InputList2Cue3=SetMMCPSizeOfMatrix
+  InputList2SigType3=Analog
+  InputList2Cue4=SetMMCPLevel$
+  InputList2SigType4=Serial
+  InputList2Cue5=SetMMCPMute$
+  InputList2SigType5=Serial
+  InputList2Cue6=ModuleName$
+  InputList2SigType6=Serial
+  InputList2Cue7=Rx$
+  InputList2SigType7=Serial
+  OutputList2Cue1=MMCPLevelFB$
+  OutputList2SigType1=Serial
+  OutputList2Cue2=MMCPMuteFB$
+  OutputList2SigType2=Serial
+  OutputList2Cue3=Tx$
+  OutputList2SigType3=Serial
+  ParamCue1=[Reference Name]
+  MinVariableInputs=2
+  MaxVariableInputs=2
+  MinVariableInputsList2=7
+  MaxVariableInputsList2=7
+  MinVariableOutputs=0
+  MaxVariableOutputs=0
+  MinVariableOutputsList2=3
+  MaxVariableOutputsList2=3
+  MinVariableParams=0
+  MaxVariableParams=0
+  Expand=expand_separately
+  Expand2=expand_separately
+  ProgramTree=Logic
+  SymbolTree=46
+  UserSymTreeName=Bose Modules
+  Hint=Recalls and sets Parameters of a Matrix Mixer Cross Point. Control Space V1.2 or higher needed 
+  PdfHelp=
+  HelpID= 
+  Render=4
+  Smpl-C=16
+  CompilerCode=-48
+  CompilerParamCode=27
+  CompilerParamCode5=14
+  NumFixedParams=1
+  Pp1=1
+  MPp=1
+  NVStorage=10
+  ParamSigType1=String
+  SmplCInputCue1=o#
+  SmplCOutputCue1=i#
+  SmplCInputList2Cue1=an#
+  SmplCOutputList2Cue1=ai#
+  SPlus2CompiledName=S2_ESP_Matrix_Mixer_CrossPoint_2_0
+  SymJam=NonExclusive
+  FileName=ESP Matrix Mixer CrossPoint 2.0.ush
+  SIMPLPlusModuleEncoding=0
+[END]
+[BEGIN]
+  ObjTp=Dp
+  H=1
+  Tp=1
+  NoS=False
+[END]
