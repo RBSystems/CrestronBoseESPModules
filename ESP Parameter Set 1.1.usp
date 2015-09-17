@@ -1,0 +1,122 @@
+/*******************************************************************************************
+  SIMPL+ Module Information
+*******************************************************************************************/
+/*
+Dealer Name: Bose Corporation
+System Name: ESP 88
+Minimum Control Space Version required: 1.1
+Programmer: AY / Sean Sauve
+Rev: 1.1
+*/
+
+/*******************************************************************************************
+  Compiler Directives
+*******************************************************************************************/
+#SYMBOL_NAME "Bose ESP ParameterSet 1.1"
+#HINT "Recalls and sets ParameterSets. Control Space V1.1 Needed "
+#CATEGORY "46" "Bose Modules" // Custom
+#DEFINE_CONSTANT GET_CMD "GS"
+#DEFINE_CONSTANT SET_CMD "SS"
+#DEFINE_CONSTANT RESPONSE_CMD "S"
+
+
+#DEFAULT_NONVOLATILE
+
+#HELP_BEGIN
+Inputs:
+	GetParameterSet. Digital. Active High. 
+		Retreives the Value of a ParameterSet Module. 
+	SetParameterSet. Analog. Change. 
+		Sets the Value of a ParameterSet Modul. 
+	Rx$. Serial.
+		Incoming Serial Signal from ESP88.
+
+Outputs:
+	ParameterSetFB. Analog. 
+		Reports back the Value of a ParameterSet Modul.
+	Tx$. Serial. 
+		Outgoing Serial Signal from ESP88.
+#HELP_END
+
+
+DIGITAL_INPUT GetParameterSet;
+ANALOG_INPUT SetParameterSet;
+BUFFER_INPUT Rx$[255]; 
+
+ANALOG_OUTPUT ParameterSetFB;
+STRING_OUTPUT Tx$;
+
+INTEGER Operation,CommandToFindLen;
+STRING CommandToFind$[255],InCommand$[255];
+
+Function Get()
+{
+	String Get$[255];
+	
+   	Makestring(Get$, "%s\r",GET_CMD);
+	Tx$=Get$;
+}
+
+Function Set(Integer Value)
+{
+	String Set$[255];
+
+	Makestring(Set$, "%s%x\r",SET_CMD,Value);
+	Tx$=Set$;
+    Get();
+}
+
+PUSH GetParameterSet
+{
+	Get();
+}
+ 
+CHANGE SetParameterSet
+{
+	Integer ParameterSet;
+
+	ParameterSet=SetParameterSet;
+    Set(ParameterSet);
+}
+
+CHANGE Rx$
+{	
+	Integer CommandStart,CommandEnd, InCommandLength;
+	String GetCommand$[255],Trash[255];
+
+	InCommand$=InCommand$+Rx$;
+	ClearBuffer(Rx$);
+	CommandStart = Find(CommandToFind$, InCommand$);
+	CommandEnd = Find("\r", InCommand$);
+	While (InCommand$<>"" && (CommandEnd>=1))
+	{
+		CommandStart = find(CommandToFind$, InCommand$);
+		If((CommandStart > 0) && (CommandEnd >= (CommandStart+CommandToFindLen))) //Handles gets and asynchronos updates
+		{
+			ParameterSetFB=HextoI(Mid(InCommand$,CommandToFindLen+CommandStart,CommandEnd-(CommandToFindLen+CommandStart)));
+		}
+
+        //Remove the Command from the "buffer"
+		InCommandLength=len(InCommand$);
+		Trash=mid(InCommand$,1,CommandEnd);
+		If(CommandEnd<InCommandLength){
+			InCommand$=mid(InCommand$,CommandEnd+1,InCommandLength-CommandEnd);
+		}Else{
+        	InCommand$="";
+		}
+		
+		CommandEnd = find("\r", InCommand$);
+	}
+
+}
+
+Function Main() //Clears Global Variables
+{
+	InCommand$="";
+	CommandToFind$="";
+	Operation = 0;
+	CommandToFindLen = 0;
+	Makestring(CommandToFind$, "%s ",RESPONSE_CMD);
+ 	CommandToFindLen = Len(CommandToFind$);
+}
+
