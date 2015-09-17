@@ -1,0 +1,99 @@
+[BEGIN]
+  Version=1
+[END]
+[BEGIN]
+  ObjTp=FSgntr
+  Sgntr=UserSPlus
+  RelVrs=1
+  IntStrVrs=1
+  SPlusVrs=4.02.26
+  CrossCplrVrs=1.3
+[END]
+[BEGIN]
+  ObjTp=Hd
+  Cmn1=Inputs:\\	GetGainLevel. Digital. Active High. \\		Retreives the||1
+  Cmn2=Gain Level of a Gain Module.\\	GetGainMute. Digital. Active High.
+  Cmn3=\\		Retreives the Gain Mute State of a Gain Module. \\	SetGainLevel$.
+  Cmn4=||1String. Change.\\		Sets the Gain Level of a Gain Module.\\		Allowed||1
+  Cmn5=Input Range is -999,-60.0 to +12.0 in 0.5 Steps\\	SetGainMute$.||1
+  Cmn6=String. Ghange.\\		Sets the Gain Mute of a Gain Module.	\\		Allowed||1
+  Cmn7=Inputs are O for On, F for Off, T for Toggle.\\	ModuleName$. String.
+  Cmn8=||1Change.\\		Sets the name of the module.\\	Rx$. Serial.\\		Incoming||1
+  Cmn9=Serial Signal from ESP.\\\\Outputs:\\    GainLevelFB$. Serial.\\
+  Cmn10=		Reports back the state of the Gain Level on a Gain Module.\\||2
+  Cmn11=||2GainMuteFB$. Serial.\\		Reports back the state of the Gain Mute||1
+  Cmn12=on a Gain Module\\	Tx$. Serial. \\		Outgoing Serial Signal from||1
+  Cmn13=ESP88.
+[END]
+[BEGIN]
+  ObjTp=Symbol
+  Exclusions=1,19,20,21,88,89,167,168,179,213,214,215,216,217,225,226,248,249,266,267,310,362,378,380,405,407,408,409,478,522,537,554,586,590,611,624,718,756,767,830,841,842,854,883,955,1032,1062,1079,1128,1129,1134,1140,1157,1158,1195,1199,1220,1221,1222,1223,1299,1348,1349,1439,1472,1473,1499,1746,1803,1975,2229,2354,2514,2523,2532,2706,2707,3235,3236,3427,3454,3567,3568,3601,3602,3708,3902,3903,3912,3918,3925,3926,4206,4207,
+  Exclusions_CDS=5
+  Inclusions_CDS=6
+  Name=Bose ESP Gain 2.0
+  SmplCName=ESP Gain 2.0.usp
+  Code=1
+  SysRev5=4.000
+  SMWRev=2.02.05
+  InputCue1=GetGainLevel
+  InputSigType1=Digital
+  InputCue2=GetGainMute
+  InputSigType2=Digital
+  InputList2Cue1=SetGainLevel$
+  InputList2SigType1=Serial
+  InputList2Cue2=SetGainMute$
+  InputList2SigType2=Serial
+  InputList2Cue3=ModuleName$
+  InputList2SigType3=Serial
+  InputList2Cue4=Rx$
+  InputList2SigType4=Serial
+  OutputList2Cue1=GainLevelFB$
+  OutputList2SigType1=Serial
+  OutputList2Cue2=GainMuteFB$
+  OutputList2SigType2=Serial
+  OutputList2Cue3=Tx$
+  OutputList2SigType3=Serial
+  ParamCue1=[Reference Name]
+  MinVariableInputs=2
+  MaxVariableInputs=2
+  MinVariableInputsList2=4
+  MaxVariableInputsList2=4
+  MinVariableOutputs=0
+  MaxVariableOutputs=0
+  MinVariableOutputsList2=3
+  MaxVariableOutputsList2=3
+  MinVariableParams=0
+  MaxVariableParams=0
+  Expand=expand_separately
+  Expand2=expand_separately
+  ProgramTree=Logic
+  SymbolTree=46
+  UserSymTreeName=Bose Modules
+  Hint=Recalls and sets Parameters on a Gain Module. Control Space V1.2 or higher needed 
+  PdfHelp=
+  HelpID= 
+  Render=4
+  Smpl-C=16
+  CompilerCode=-48
+  CompilerParamCode=27
+  CompilerParamCode5=14
+  NumFixedParams=1
+  Pp1=1
+  MPp=1
+  NVStorage=10
+  ParamSigType1=String
+  SmplCInputCue1=o#
+  SmplCOutputCue1=i#
+  SmplCInputList2Cue1=an#
+  SmplCOutputList2Cue1=ai#
+  SPlus2CompiledName=S2_ESP_Gain_2_0
+  SymJam=NonExclusive
+  FileName=ESP Gain 2.0.ush
+  SIMPLPlusModuleEncoding=0
+[END]
+[BEGIN]
+  ObjTp=Dp
+  H=1
+  Tp=1
+  NoS=False
+[END]
