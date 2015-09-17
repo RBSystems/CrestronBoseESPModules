@@ -1,0 +1,168 @@
+/*******************************************************************************************
+  SIMPL+ ModuleName Information
+*******************************************************************************************/
+/*
+Dealer Name: Bose Corporation
+System Name: ESP
+Minimum Control Space Version required: 1.2
+Programmer: AY / Sean Sauve
+Rev: 2.1
+*/
+
+/*******************************************************************************************
+  Compiler Directives
+*******************************************************************************************/
+#SYMBOL_NAME "Bose ESP Gain 2.0"
+#HINT "Recalls and sets Parameters on a Gain Module. Control Space V1.2 or higher needed "
+#CATEGORY "46" "Bose Modules" // Custom
+#DEFINE_CONSTANT NO_CMD 0
+#DEFINE_CONSTANT LEVEL_CMD 1
+#DEFINE_CONSTANT MUTE_CMD 2
+
+#DEFAULT_NONVOLATILE
+
+#HELP_BEGIN
+Inputs:
+	GetGainLevel. Digital. Active High. 
+		Retreives the Gain Level of a Gain Module.
+	GetGainMute. Digital. Active High.
+		Retreives the Gain Mute State of a Gain Module. 
+	SetGainLevel$. String. Change.
+		Sets the Gain Level of a Gain Module.
+		Allowed Input Range is -999,-60.0 to +12.0 in 0.5 Steps
+	SetGainMute$. String. Ghange.
+		Sets the Gain Mute of a Gain Module.	
+		Allowed Inputs are O for On, F for Off, T for Toggle.
+	ModuleName$. String. Change.
+		Sets the name of the module.
+	Rx$. Serial.
+		Incoming Serial Signal from ESP.
+
+Outputs:
+    GainLevelFB$. Serial.
+		Reports back the state of the Gain Level on a Gain Module.
+    GainMuteFB$. Serial.
+		Reports back the state of the Gain Mute on a Gain Module
+	Tx$. Serial. 
+		Outgoing Serial Signal from ESP88.
+#HELP_END
+
+DIGITAL_INPUT GetGainLevel,GetGainMute;
+STRING_INPUT SetGainLevel$[6],SetGainMute$[1],ModuleName$[255];
+BUFFER_INPUT Rx$[255]; 
+   
+STRING_OUTPUT GainLevelFB$,GainMuteFB$,Tx$;
+
+INTEGER Operation,CommandToFindLen;
+STRING CommandToFind$[255],InCommand$[255];
+
+Function Get(Integer Index1)
+{
+	String Get$[255];
+	
+   	Makestring(Get$, "GA\"#%s\">%d\r",ModuleName$,Index1);
+	Operation = NO_CMD;
+	Tx$=Get$;
+}
+
+Function Set(Integer Index1, String Value$)
+{
+	String Set$[255];
+
+	Makestring(Set$, "SA\"#%s\">%d=%s\r",ModuleName$,Index1,Value$);
+	Operation = Index1;
+	Tx$=Set$;
+    Get(Index1);
+}
+       
+ 
+//Gets
+Push GetGainLevel
+{
+	Get(LEVEL_CMD);
+}
+
+Push GetGainMute
+{
+ 	Get(MUTE_CMD);
+}
+
+//Sets  
+CHANGE SetGainLevel$
+{
+	String GainLevel$[6];
+	
+	GainLevel$=SetGainLevel$;
+    Set(LEVEL_CMD,GainLevel$);
+}
+
+CHANGE SetGainMute$
+{
+	String GainMute$[1];
+
+	GainMute$=SetGainMute$;    
+	If ((GainMute$="O") || (GainMute$="F") || (GainMute$="T"))
+    {
+	    Set(MUTE_CMD,GainMute$);
+	}
+}
+
+//Other
+Change ModuleName$
+{
+
+	Makestring(CommandToFind$, "\"#%s\">",ModuleName$);
+	CommandToFindLen = Len(CommandToFind$);
+
+}
+
+CHANGE Rx$
+{	
+	Integer CommandStart,CommandEnd, InCommandLength;
+	String Received$[100],Index$[2],Trash[255];
+ 
+	InCommand$=InCommand$+Rx$;
+	ClearBuffer(Rx$);
+	CommandStart = Find(CommandToFind$, InCommand$);
+	CommandEnd = Find("\r", InCommand$);
+	While (InCommand$<>"" && (CommandEnd>=1))
+	{
+		CommandStart = find(CommandToFind$, InCommand$);
+		if((CommandStart > 0) && (CommandEnd >= (CommandStart+CommandToFindLen))) //Handles gets and asynchronos updates
+		{
+			Received$=Mid(InCommand$,CommandStart+CommandToFindLen,CommandEnd-(CommandStart+CommandToFindLen));
+			Index$=Remove("=",Received$);
+			CSWITCH (ATOI(Index$))
+			{
+	        	Case(LEVEL_CMD):
+				{
+					GainLevelFB$=Received$;
+					Break;
+				}			
+				Case(MUTE_CMD):
+				{
+					GainMuteFB$=Received$;
+					Break;
+				}
+			}
+		}
+        //Remove the Command from the "buffer"
+		InCommandLength=len(InCommand$);
+		Trash=mid(InCommand$,1,CommandEnd);
+		If(CommandEnd<InCommandLength){
+			InCommand$=mid(InCommand$,CommandEnd+1,InCommandLength-CommandEnd);
+		}Else{
+        	InCommand$="";
+		}
+		
+		CommandEnd = find("\r", InCommand$);
+	}
+}
+              
+Function Main() //Clears Global Variables
+{
+	InCommand$="";
+	CommandToFind$="";
+	Operation = 0;
+	CommandToFindLen = 0;
+}
